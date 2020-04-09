@@ -25,9 +25,6 @@ public class ECSInterface : MonoBehaviour
     Button addItem;
 
     [SerializeField]
-    Dropdown countDropDown;
-
-    [SerializeField]
     Text text;
 
     private void Start()
@@ -44,19 +41,10 @@ public class ECSInterface : MonoBehaviour
 
         itemType.AddOptions(options);
 
-        countDropDown.onValueChanged.AddListener(HandleButtonClick);
-        itemType.onValueChanged.AddListener(HandleSelectItem);
+        itemType.onValueChanged.AddListener(HandleDropDownChange);
         addItem.onClick.AddListener(HandleAddItem);
 
         selectedItem = items[0];
-    }
-
-    private void HandleSelectItem(int arg0)
-    {
-        if (items[arg0] != null)
-        {
-            selectedItem = items[arg0];
-        }
     }
 
     private void HandleAddItem()
@@ -68,22 +56,41 @@ public class ECSInterface : MonoBehaviour
         manager.SetComponentData(instance, new Translation {
             Value = new Vector3(UnityEngine.Random.Range(-10, 10), 0, UnityEngine.Random.Range(-10, 10))
         });
+
+        HandleDropDownChange(itemType.value);
     }
 
-    private void HandleButtonClick(int arg0)
+    private void HandleDropDownChange(int arg0)
     {
+        if (items[arg0] != null)
+        {
+            selectedItem = items[arg0];
+        }
 
+        ComponentType type = null;
         EntityQuery query = null;
+
         switch (arg0) 
         {
             case 0:
-                query = manager.CreateEntityQuery(ComponentType.ReadOnly<TankData>());
+                type = ComponentType.ReadOnly<SheepData>();
                 break;
             case 1:
-                query = manager.CreateEntityQuery(ComponentType.ReadOnly<SheepData>());
+                type = ComponentType.ReadOnly<TankData>();
+                break;
+            default:
+                type = null;
                 break;
         }
 
-        text.text = query.CalculateEntityCount().ToString();
+        if (type != null)
+        {
+            query = manager.CreateEntityQuery(type);
+
+            text.text = query.CalculateEntityCount().ToString();
+        }
+        else {
+            text.text = "No entitys";
+        }
     }
 }
